@@ -1,3 +1,6 @@
+
+/** Combine two data files (usually English and Latin) into one dual language
+ *      version, which will be used to generate the HTML page.*/
 def cli = new CliBuilder(usage: "Read two Angelus files and weave them together")
 cli.p(longOpt: "primary", args: 1, required: true, "Primary file")
 cli.s(longOpt: "secondary", args: 1, required: true, "Secondary file")
@@ -18,4 +21,11 @@ println "files exist"
 data.lines["p"] = p.readLines().grep {it =~ /[^ ]/}
 data.lines.s = s.readLines().grep {it =~ /[^ ]/}
 assert data.lines.p.size() == data.lines.s.size()
-println data
+// Now march through the lines and create unified file.
+def l = data.lines
+def sections = (0 .. data.lines.p.size()).collect {
+  i ->
+    def pt = l.p[i];
+    def st = l.s[i];
+    assert pt =~ /^([a-zA-Z]+): *(.*)/
+}
