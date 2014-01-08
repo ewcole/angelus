@@ -46,4 +46,4 @@ def sections = (0 .. data.lines.p.size()).collect {
     }
     sct
 }
-println new JsonOutput().prettyPrint(new JsonOutput().toJson(sections))
+new File('webapp/js/angelus.json').text = new JsonOutput().prettyPrint(new JsonOutput().toJson(sections))
