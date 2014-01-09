@@ -1,4 +1,5 @@
 import groovy.json.*
+import groovy.xml.*
 
 /** Combine two data files (usually English and Latin) into one dual language
  *      version, which will be used to generate the HTML page.*/
@@ -47,3 +48,15 @@ def sections = (0 .. data.lines.p.size()).collect {
     sct
 }
 new File('webapp/js/angelus.json').text = new JsonOutput().prettyPrint(new JsonOutput().toJson(sections))
+def body = new File('webapp/htmlBody.html')
+new MarkupBuilder(body.newWriter()).div(id: "pagebody") {
+  sections.eachWithIndex {
+    i, j ->
+      div(class: "section section$j ${i[0]}", id:"section$j") {
+        div(class: "title", "${i[0]}")
+        div(class: "pr", "${i[1]}")
+        div(class: "se", "${i[2]}")
+        
+      }
+  }
+}
