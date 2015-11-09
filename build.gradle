@@ -1,0 +1,98 @@
+// This build file is derived from the template found at this GitHub repository.
+//
+// https://github.com/ae6rt/gradle-antlr4-template/blob/master/build.gradle
+//
+
+// Load the groovy plugin
+apply plugin: 'groovy';
+apply plugin: 'application';
+
+mainClassName = ''
+
+// Use the Maven Central repository for loading dependencies.
+repositories {
+    mavenCentral()
+}
+
+// This defines some variables we will use in generating the ANTLR4 objects.
+ext.antlr = [
+  // the package the generated source files will belong to.
+  grammarpackage: "com.github.ewcole.angelus",
+
+  // Where do you look for the grammar files?
+  antlrSource: 'src/main/antlr',
+
+  // Where do you put the Java source code that ANTLR4 creates?
+  destinationDir: "build/generated-sources/java"
+]
+
+configurations {
+    antlr4 {
+        description = "ANTLR4"
+    }
+}
+
+dependencies {
+  compile 'org.antlr:antlr4:4.5'
+  compile 'org.codehaus.groovy:groovy-all:2.4.4'
+
+  runtime 'org.antlr:antlr4:4.5'
+  runtime 'org.codehaus.groovy:groovy-all:2.4.4'
+  runtime "commons-cli:commons-cli:1.2"
+
+  // use ANTLR version 4
+  antlr4 group: "org.antlr", name: "antlr4", version: "4.5"
+    
+}
+
+// Create the directory for the generated source.
+task antlrOutputDir << {
+    mkdir(antlr.destinationDir)
+}
+
+// Run the ANTLR4 tool on the grammar files in the source directory.
+task generateGrammarSource(dependsOn: antlrOutputDir, type: JavaExec) {
+    description = 'Generates Java sources from ANTLR4 grammars.'
+
+    // Defining inputs and outputs means that Gradle will only execute the task
+    //  if the file contents are different from the way they were the last time
+    //  Gradle was run.
+    inputs.dir file(antlr.antlrSource)
+    outputs.dir file(antlr.destinationDir)
+
+    def grammars = fileTree(antlr.antlrSource).include('**/*.g4')
+
+    // org.antlr.v4.Tool is the class that writes your recognizers.
+    main = 'org.antlr.v4.Tool'
+    classpath = configurations.antlr4
+    def pkg = antlr.grammarpackage.replaceAll("\\.", "/")
+    args = ["-o", "${antlr.destinationDir}/${pkg}"/*, "-atn"*/, 
+            "-visitor", 
+            "-package", antlr.grammarpackage, 
+            grammars.files].flatten()
+}
+
+compileJava {
+    dependsOn generateGrammarSource
+    source antlr.destinationDir
+}
+
+clean {
+    delete antlr.destinationDir
+}
+
+task compile {
+  dependsOn = [compileGroovy, compileJava]
+}
+
+build.dependsOn jar, assemble
+
+task genJson(type: JavaExec) {
+  dependsOn compile
+  description "Read the input files"
+  main = ''
+  classpath = configurations.runtime
+} 
+
+run.args = ['args here']
+
